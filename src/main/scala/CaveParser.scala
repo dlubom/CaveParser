@@ -25,7 +25,7 @@ class Trip(val time: Long, val comment: String, val declination: Short)
 
 object TopToCave extends App {
   import TopImplicits._
-  val d = new DataInputStream(new java.io.FileInputStream("C:\\Users\\dlubomsk\\IdeaProjects\\CaveParser\\test2.top"))
+  val d = new DataInputStream(new java.io.FileInputStream("test2.top"))
 
   assert(d.readByte.toChar == 'T')
   assert(d.readByte.toChar == 'o')

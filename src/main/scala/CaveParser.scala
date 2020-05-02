@@ -32,11 +32,20 @@ case class StationId(val id: Int) {
   }
 }
 
-case class Shot(val from: String, val to: String, val dist: Double, val azimuth: Short, val inclination: Short, val flags: Byte, val roll: Byte, val tripIndex: Short, val comment: String) {
+case class Shot(val from: String, val to: String, val dist: Double, val azimuth: Double, val inclination: Short, val flags: Byte, val roll: Byte, val tripIndex: Short, val comment: String) {
+  require(azimuth >= 0 && azimuth <= 360)
 
-  def this(from: StationId, to: StationId, dist: Int, azimuth: Short, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String) = {
-    this(from.toString, to.toString, dist / 1000.0, azimuth, inclination, flags, roll, tripIndex, comment)
-    //TODO jak to zrobić aby działało bez new : https://stackoverflow.com/questions/33463986/how-can-i-specify-multiple-constructors-in-the-case-class
+  override def toString: String = {
+    //TODO wyrownanie
+    s"$from -> $to = dist: $dist azimuth: $azimuth inclination: $inclination | flags: $flags roll: $roll tripIndex: $tripIndex comment: $comment"
+  }
+}
+
+object Shot {
+  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String) = new Shot(from, to, dist, azimuth, inclination, flags, roll, tripIndex, comment)
+
+  def apply(from: StationId, to: StationId, dist: Int, azimuth: Short, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String) = {
+    new Shot(from.toString, to.toString, dist / 1000.0, fromTopAzimuth(azimuth), inclination, flags, roll, tripIndex, comment)
     //Shot = {
     //  Id from
     //    Id to
@@ -51,15 +60,15 @@ case class Shot(val from: String, val to: String, val dist: Double, val azimuth:
     //}
   }
 
-  override def toString: String = {
-    //TODO wyrownanie
-    s"$from -> $to = dist: $dist azimuth: $azimuth inclination: $inclination | flags: $flags roll: $roll tripIndex: $tripIndex comment: $comment"
+  def fromTopAzimuth(az: Short): Double = {
+    val az_cast = (az * 360.0) / 65536.0
+    if (az_cast < 0) az_cast + 360 else az_cast
   }
 }
 
 object TopToCave extends App {
 
-  val d = new DataInputStream(new java.io.FileInputStream("test2.top"))
+  val d = new DataInputStream(new java.io.FileInputStream("meander_kka.top"))
 
   assert(d.readByte.toChar == 'T')
   assert(d.readByte.toChar == 'o')
@@ -89,7 +98,7 @@ object TopToCave extends App {
     val tripIndex = d.readShortLE
     val comment = if ((flags & 2) != 0) d.readString else ""
 
-    new Shot(StationId(from), StationId(to), dist, azimuth, inclination, flags, roll, tripIndex, comment)
+    Shot(StationId(from), StationId(to), dist, azimuth, inclination, flags, roll, tripIndex, comment)
   }).toList
 
   assert(trips.length == tripCount)

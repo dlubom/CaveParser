@@ -32,8 +32,10 @@ case class StationId(val id: Int) {
   }
 }
 
-case class Shot(val from: String, val to: String, val dist: Double, val azimuth: Double, val inclination: Short, val flags: Byte, val roll: Byte, val tripIndex: Short, val comment: String) {
+case class Shot(val from: String, val to: String, val dist: Double, val azimuth: Double, val inclination: Double, val flags: Byte, val roll: Byte, val tripIndex: Short, val comment: String) {
+  require(dist >= 0)
   require(azimuth >= 0 && azimuth <= 360)
+  require(inclination >= -90 && inclination <= 90)
 
   override def toString: String = {
     //TODO wyrownanie
@@ -42,10 +44,10 @@ case class Shot(val from: String, val to: String, val dist: Double, val azimuth:
 }
 
 object Shot {
-  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String) = new Shot(from, to, dist, azimuth, inclination, flags, roll, tripIndex, comment)
+  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Double, flags: Byte, roll: Byte, tripIndex: Short, comment: String) = new Shot(from, to, dist, azimuth, inclination, flags, roll, tripIndex, comment)
 
   def apply(from: StationId, to: StationId, dist: Int, azimuth: Short, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String) = {
-    new Shot(from.toString, to.toString, dist / 1000.0, fromTopAzimuth(azimuth), inclination, flags, roll, tripIndex, comment)
+    new Shot(from.toString, to.toString, dist / 1000.0, fromTopAzimuth(azimuth), fromTopInclination(inclination), flags, roll, tripIndex, comment)
     //Shot = {
     //  Id from
     //    Id to
@@ -64,6 +66,8 @@ object Shot {
     val az_cast = (az * 360.0) / 65536.0
     if (az_cast < 0) az_cast + 360 else az_cast
   }
+
+  def fromTopInclination(inc: Short): Double = (inc * 360.0) / 65536.0
 }
 
 object TopToCave extends App {

@@ -32,21 +32,22 @@ case class StationId(val id: Int) {
   }
 }
 
-case class Shot(val from: String, val to: String, val dist: Double, val azimuth: Double, val inclination: Double, val flags: Byte, val roll: Byte, val tripIndex: Short, val comment: String) {
+case class Shot(val from: String, val to: String, val dist: Double, val azimuth: Double, val inclination: Double, val flags: Byte, val roll: Double, val tripIndex: Short, val comment: String) {
   require(dist >= 0)
   require(azimuth >= 0 && azimuth <= 360)
+  require(roll >= 0 && roll <= 360)
   require(inclination >= -90 && inclination <= 90)
 
   override def toString: String =
-    f"$from%10s -> $to%10s dist: $dist%10.3f azimuth: $azimuth%7.2f inclination: $inclination%7.2f | flags: $flags roll: $roll tripIndex: $tripIndex comment: $comment"
+    f"$from%10s -> $to%10s dist: $dist%10.3f azimuth: $azimuth%7.2f inclination: $inclination%7.2f | flags: $flags roll: $roll%7.2f tripIndex: $tripIndex comment: $comment"
 }
 
 object Shot {
-  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Double, flags: Byte, roll: Byte, tripIndex: Short, comment: String) =
+  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Double, flags: Byte, roll: Double, tripIndex: Short, comment: String) =
     new Shot(from, to, dist, azimuth, inclination, flags, roll, tripIndex, comment)
 
   def apply(from: StationId, to: StationId, dist: Int, azimuth: Short, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String): Shot = {
-    new Shot(from.toString, to.toString, dist / 1000.0, fromTopAzimuth(azimuth), fromTopInclination(inclination), flags, roll, tripIndex, comment)
+    new Shot(from.toString, to.toString, fromTopDist(dist), fromTopAzimuth(azimuth), fromTopInclination(inclination), flags, fromTopRoll(roll), tripIndex, comment)
     //Shot = {
     //  Id from
     //    Id to
@@ -61,9 +62,16 @@ object Shot {
     //}
   }
 
+  def fromTopDist(d: Int) : Double = d/1000.0
+
   def fromTopAzimuth(az: Short): Double = {
     val az_cast = (az * 360.0) / 65536.0
     if (az_cast < 0) az_cast + 360 else az_cast
+  }
+
+  def fromTopRoll(r: Byte): Double = { //TODO need test from RAW disto-X
+    val r_cast = (r * 360.0) / 256.0
+    if (r_cast < 0) r_cast + 360 else r_cast
   }
 
   def fromTopInclination(inc: Short): Double = (inc * 360.0) / 65536.0

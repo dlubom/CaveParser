@@ -37,16 +37,15 @@ case class Shot(val from: String, val to: String, val dist: Double, val azimuth:
   require(azimuth >= 0 && azimuth <= 360)
   require(inclination >= -90 && inclination <= 90)
 
-  override def toString: String = {
-    //TODO wyrownanie
-    s"$from -> $to = dist: $dist azimuth: $azimuth inclination: $inclination | flags: $flags roll: $roll tripIndex: $tripIndex comment: $comment"
-  }
+  override def toString: String =
+    f"$from%10s -> $to%10s dist: $dist%10.3f azimuth: $azimuth%7.2f inclination: $inclination%7.2f | flags: $flags roll: $roll tripIndex: $tripIndex comment: $comment"
 }
 
 object Shot {
-  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Double, flags: Byte, roll: Byte, tripIndex: Short, comment: String) = new Shot(from, to, dist, azimuth, inclination, flags, roll, tripIndex, comment)
+  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Double, flags: Byte, roll: Byte, tripIndex: Short, comment: String) =
+    new Shot(from, to, dist, azimuth, inclination, flags, roll, tripIndex, comment)
 
-  def apply(from: StationId, to: StationId, dist: Int, azimuth: Short, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String) = {
+  def apply(from: StationId, to: StationId, dist: Int, azimuth: Short, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String): Shot = {
     new Shot(from.toString, to.toString, dist / 1000.0, fromTopAzimuth(azimuth), fromTopInclination(inclination), flags, roll, tripIndex, comment)
     //Shot = {
     //  Id from

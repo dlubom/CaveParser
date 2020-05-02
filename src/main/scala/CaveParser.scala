@@ -16,10 +16,10 @@ case class StationId(val id: Int) {
 
   def isMajorMinor: Boolean = id != ID_UNDEFINED && id >= 0
 
-  def getNumber: Int = {
-    if (!isNumber) return -1
-    id + 0x80000001
-  }
+//  def getNumber: Int = {
+//    if (!isNumber) return -1
+//    id + 0x80000001
+//  }
 
   //TODO get MajorMinor ?
 
@@ -58,7 +58,7 @@ object Shot {
     if (az_cast < 0) az_cast + 360 else az_cast
   }
 
-  def fromTopRoll(r: Byte): Double = { //TODO need test from RAW disto-X
+  def fromTopRoll(r: Byte): Double = { //TODO need test from RAW disto-X 2
     val r_cast = (r * 360.0) / 256.0
     if (r_cast < 0) r_cast + 360 else r_cast
   }

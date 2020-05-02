@@ -7,7 +7,6 @@ case class Trip(val time: Long, val comment: String, val declination: Short) {
 }
 
 case class StationId(val id: Int) {
-  //TODO require(id) ?
   val ID_UNDEFINED = 0x80000000
   val ID_NUMBER = 0x80000001
 
@@ -22,7 +21,7 @@ case class StationId(val id: Int) {
     id + 0x80000001
   }
 
-  //TODO get MajorMinor
+  //TODO get MajorMinor ?
 
   override def toString: String = {
     if (isNumber) "%d".format(id + 0x80000001)
@@ -32,37 +31,27 @@ case class StationId(val id: Int) {
   }
 }
 
-case class Shot(val from: String, val to: String, val dist: Double, val azimuth: Double, val inclination: Double, val flags: Byte, val roll: Double, val tripIndex: Short, val comment: String) {
+case class Shot(val from: String, val to: String, val dist: Double, val azimuth: Double, val inclination: Double, val flippedShot: Boolean, val roll: Double, val tripIndex: Short, val comment: String) {
   require(dist >= 0)
   require(azimuth >= 0 && azimuth <= 360)
   require(roll >= 0 && roll <= 360)
   require(inclination >= -90 && inclination <= 90)
+  require(tripIndex >= -1) // -1: no trip, >=0: trip reference
 
   override def toString: String =
-    f"$from%10s -> $to%10s dist: $dist%10.3f azimuth: $azimuth%7.2f inclination: $inclination%7.2f | flags: $flags roll: $roll%7.2f tripIndex: $tripIndex comment: $comment"
+    f"$from%10s -> $to%10s dist: $dist%10.3f azimuth: $azimuth%7.2f inclination: $inclination%7.2f | flippedShot: $flippedShot roll: $roll%7.2f tripIndex: $tripIndex comment: $comment"
 }
 
 object Shot {
-  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Double, flags: Byte, roll: Double, tripIndex: Short, comment: String) =
-    new Shot(from, to, dist, azimuth, inclination, flags, roll, tripIndex, comment)
+  def apply(from: String, to: String, dist: Double, azimuth: Double, inclination: Double, flippedShot: Boolean, roll: Double, tripIndex: Short, comment: String) =
+    new Shot(from, to, dist, azimuth, inclination, flippedShot, roll, tripIndex, comment)
 
-  def apply(from: StationId, to: StationId, dist: Int, azimuth: Short, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String): Shot = {
-    new Shot(from.toString, to.toString, fromTopDist(dist), fromTopAzimuth(azimuth), fromTopInclination(inclination), flags, fromTopRoll(roll), tripIndex, comment)
-    //Shot = {
-    //  Id from
-    //    Id to
-    //    Int32 dist  // mm
-    //    Int16 azimuth  // internal angle units (full circle = 2^16, north = 0, east = 0x4000)
-    //    Int16 inclination // internal angle units (full circle = 2^16, up = 0x4000, down = 0xC000)
-    //    Byte flags  // bit0: flipped shot
-    //    Byte roll   // roll angle (full circle = 256, disply up = 0, left = 64, down = 128)
-    //    Int16 tripIndex  // -1: no trip, >=0: trip reference
-    //  if (flags & 2)
-    //    String comment
-    //}
-  }
+  def apply(from: StationId, to: StationId, dist: Int, azimuth: Short, inclination: Short, flags: Byte, roll: Byte, tripIndex: Short, comment: String): Shot =
+    new Shot(from.toString, to.toString, fromTopDist(dist), fromTopAzimuth(azimuth), fromTopInclination(inclination), fromTopFlags(flags), fromTopRoll(roll), tripIndex, comment)
 
-  def fromTopDist(d: Int) : Double = d/1000.0
+  def fromTopDist(d: Int): Double = d / 1000.0
+
+  def fromTopFlags(f: Byte): Boolean = (f & 1) != 0
 
   def fromTopAzimuth(az: Short): Double = {
     val az_cast = (az * 360.0) / 65536.0

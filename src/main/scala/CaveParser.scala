@@ -2,7 +2,7 @@ import java.io.DataInputStream
 import TopImplicits._
 
 case class Trip(val time: Long, val comment: String, val declination: Short) {
-  //time TODO
+  //time TODO ticks [100 ns] since 1.01.01 00:00
   //declination*360.0/65536.0 //TODO ?
 }
 
@@ -16,10 +16,10 @@ case class StationId(val id: Int) {
 
   def isMajorMinor: Boolean = id != ID_UNDEFINED && id >= 0
 
-//  def getNumber: Int = {
-//    if (!isNumber) return -1
-//    id + 0x80000001
-//  }
+  //  def getNumber: Int = {
+  //    if (!isNumber) return -1
+  //    id + 0x80000001
+  //  }
 
   //TODO get MajorMinor ?
 

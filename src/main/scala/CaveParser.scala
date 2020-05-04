@@ -35,11 +35,31 @@ case class Shot(val from: String, val to: String, val dist: Double, val azimuth:
   require(dist >= 0)
   require(azimuth >= 0 && azimuth <= 360)
   require(roll >= 0 && roll <= 360)
-  require(inclination >= -90 && inclination <= 90)
+  require(inclination >= -90 && inclination <= 90) //TODO top PocketTopo allow that - what to do ? Warining ?
   require(tripIndex >= -1) // -1: no trip, >=0: trip reference
+
+  //TODO add is it splay shot?
+
+  //TODO is exual ?
+  //TODO is simmilar ? = could be exual
+  //TODO revert
+
+  def canEqual(a: Any): Boolean = a.isInstanceOf[Shot]
+
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Shot =>
+        that.canEqual(this) &&
+          this.to != "-" &&
+          this.from == that.from &&
+          this.to == that.to
+      case _ => false
+    }
 
   override def toString: String =
     f"$from%10s -> $to%10s dist: $dist%10.3f azimuth: $azimuth%7.2f inclination: $inclination%7.2f | flippedShot: $flippedShot roll: $roll%7.2f tripIndex: $tripIndex comment: $comment"
+
+//  override def hashCode(): Int = "super".hashCode()
 }
 
 object Shot {
@@ -107,4 +127,27 @@ object TopToCave extends App {
   println(trips.length, shots.length)
 
   shots.map(println)
+
+  import collection.mutable.{LinkedHashMap, LinkedHashSet, Map => MutableMap}
+
+  object GroupByOrderedImplicit {
+    implicit class GroupByOrderedImplicitImpl[A](val t: Traversable[A]) extends AnyVal {
+      def groupByOrdered[K](f: A => K): MutableMap[K, LinkedHashSet[A]] = {
+        val map = LinkedHashMap[K,LinkedHashSet[A]]().withDefault(_ => LinkedHashSet[A]())
+        for (i <- t) {
+          val key = f(i)
+          map(key) = map(key) + i
+        }
+        map
+      }
+    }
+  }
+  import GroupByOrderedImplicit._
+  val m = shots.groupByOrdered(x => {
+    if (x.to != "-" && x.from > x.to) x.to + "$" + x.from
+    else if (x.to == "-") x.from + "$" + x.to + x.azimuth
+    else x.from + "$" + x.to
+  })
+
+  m.foreach(x => println(x._1, x._2.toList.length) )
 }
